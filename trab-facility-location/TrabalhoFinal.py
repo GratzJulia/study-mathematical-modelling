@@ -1,4 +1,5 @@
 import gurobipy as gp
+from pathlib import Path
 
 
 class Instancia:
@@ -30,7 +31,7 @@ class Instancia:
 
 
 def ler_instancia(nome_arquivo: str):
-    path = 'trab-facility-location/instancias/' + nome_arquivo + '.txt'
+    path = "trab-facility-location/instancias/" + nome_arquivo + ".txt"
     try:
         with open(path, "r", encoding="utf-8") as arq:
             linhas = []
@@ -39,7 +40,7 @@ def ler_instancia(nome_arquivo: str):
                 if linha != "":
                     linhas.append(linha)
     except Exception as e:
-        print('Verifique o path das suas instâncias! ', {e})
+        print("Verifique o path das suas instâncias! ", {e})
         return None
 
     primeira = linhas[0].split()
@@ -174,7 +175,7 @@ def criar_modelo(dados: Instancia, nome_arquivo: str):
             name=f"capacidade_deposito_{d}",
         )
 
-    m.write('trab-facility-location/modelos/' + nome_arquivo + '.lp')
+    m.write("trab-facility-location/modelos/" + nome_arquivo + ".lp")
     return m, {
         "abertura_deposito": abertura_deposito,
         "abertura_fabrica": abertura_fabrica,
@@ -219,7 +220,13 @@ def main(dados: Instancia):
         print("\nNenhuma solução ótima encontrada.")
 
 
-arquivo = "toy"
-dados = ler_instancia(arquivo)
-if dados:
-    main(dados)
+if __name__ == "__main__":
+    p = Path("./trab-facility-location/instancias/")
+    instancias = [arq.stem for arq in p.iterdir() if arq.suffix in [".txt"]]
+
+    for i in instancias:
+        print("\nINÍCIO instancia " + i)
+        dados = ler_instancia(i)
+        # if dados:
+        #     main(dados)
+        print("FIM instancia " + i)
