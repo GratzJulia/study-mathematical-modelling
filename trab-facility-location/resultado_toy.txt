@@ -1,0 +1,17 @@
+Valor ótimo = 46159.0
+
+FÁBRICAS ABERTAS:
+[0]
+
+DEPÓSITOS ABERTOS:
+[1]
+
+FLUXO FASE 1:
+Fabrica 0 >> Depósito 1 = 71.00
+
+FLUXO FASE 2:
+Depósito 1 >> Cliente 0 = 11.00
+Depósito 1 >> Cliente 1 = 18.00
+Depósito 1 >> Cliente 2 = 15.00
+Depósito 1 >> Cliente 3 = 15.00
+Depósito 1 >> Cliente 4 = 12.00
