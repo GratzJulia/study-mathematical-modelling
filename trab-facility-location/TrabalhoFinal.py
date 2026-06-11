@@ -31,7 +31,7 @@ class Instancia:
 
 
 def ler_instancia(nome_arquivo: str):
-    path = "trab-facility-location/instancias/" + nome_arquivo + ".txt"
+    path = "instancias/" + nome_arquivo + ".txt"
     try:
         with open(path, "r", encoding="utf-8") as arq:
             linhas = []
@@ -150,7 +150,7 @@ def criar_modelo(dados: Instancia, nome_arquivo: str):
     for c in dados.C:
         m.addConstr(
             gp.quicksum(transp_deposito_cliente[d, c] for d in dados.D)
-            >= dados.demandas_clientes[c],
+            == dados.demandas_clientes[c],
             name=f"demanda_cliente_{c}",
         )
 
@@ -175,7 +175,7 @@ def criar_modelo(dados: Instancia, nome_arquivo: str):
             name=f"capacidade_deposito_{d}",
         )
 
-    m.write("trab-facility-location/modelos/" + nome_arquivo + ".lp")
+    m.write("modelos/" + nome_arquivo + ".lp")
     return m, {
         "abertura_deposito": abertura_deposito,
         "abertura_fabrica": abertura_fabrica,
@@ -184,49 +184,57 @@ def criar_modelo(dados: Instancia, nome_arquivo: str):
     }
 
 
-def main(dados: Instancia):
+def main(dados: Instancia, arquivo: str):
     model, vd = criar_modelo(dados, arquivo)
+
+    model.setParam("TimeLimit", 300.0)
     model.optimize()
-
     if model.status == gp.GRB.OPTIMAL:
-        print(f"\nValor ótimo = {model.objVal}")
+        with open("resultado_" + arquivo + ".txt", "w", encoding="utf-8") as f:
+            f.write(f"Valor ótimo = {model.objVal}\n")
 
-        print("\nFÁBRICAS ABERTAS")
-        for f in dados.F:
-            if vd["abertura_fabrica"][f].X > 0.5:
-                print(f"Fábrica {f}")
+            f.write("\nFÁBRICAS ABERTAS:\n")
+            fab_abertas = []
+            for i in dados.F:
+                if vd["abertura_fabrica"][i].X > 0.5:
+                    fab_abertas.append(i)
 
-        print("\nDEPÓSITOS ABERTOS")
-        for d in dados.D:
-            if vd["abertura_deposito"][d].X > 0.5:
-                print(f"Depósito {d}")
+            f.write(f"{str(fab_abertas)}\n")
 
-        print("\nFLUXO FASE 1")
-        for f in dados.F:
+            f.write("\nDEPÓSITOS ABERTOS:\n")
+            dep_abertos = []
             for d in dados.D:
-                if vd["transp_fabrica_deposito"][f, d].X > 1e-6:
-                    print(
-                        f"Fabrica {f} >> Depósito {d} = {vd['transp_fabrica_deposito'][f,d].X}"
-                    )
+                if vd["abertura_deposito"][d].X > 0.5:
+                    dep_abertos.append(d)
 
-        print("\nFLUXO FASE 2")
-        for d in dados.D:
-            for c in dados.C:
-                if vd["transp_deposito_cliente"][d, c].X > 1e-6:
-                    print(
-                        f"Depósito {d} >> Cliente {c} = {vd['transp_deposito_cliente'][d,c].X}"
-                    )
+            f.write(f"{str(dep_abertos)}\n")
+
+            f.write("\nFLUXO FASE 1:\n")
+            for i in dados.F:
+                for d in dados.D:
+                    valor_fluxo = vd["transp_fabrica_deposito"][i, d].X
+                    if valor_fluxo > 1e-6:
+                        f.write(f"Fabrica {i} >> Depósito {d} = {valor_fluxo:.2f}\n")
+
+
+            f.write("\nFLUXO FASE 2:\n")
+            for d in dados.D:
+                for c in dados.C:
+                    valor_fluxo = vd["transp_deposito_cliente"][d, c].X
+                    if valor_fluxo > 1e-6:
+                        f.write(f"Depósito {d} >> Cliente {c} = {valor_fluxo:.2f}\n")
+
     else:
         print("\nNenhuma solução ótima encontrada.")
 
 
 if __name__ == "__main__":
-    p = Path("./trab-facility-location/instancias/")
+    p = Path("./instancias/")
     instancias = [arq.stem for arq in p.iterdir() if arq.suffix in [".txt"]]
 
     for i in instancias:
         print("\nINÍCIO instancia " + i)
         dados = ler_instancia(i)
-        # if dados:
-        #     main(dados)
+        if dados:
+            main(dados, i)
         print("FIM instancia " + i)
