@@ -1,5 +1,28 @@
 import gurobipy as gp
 from pathlib import Path
+from enum import IntEnum
+
+
+class GurobiStatusCodeMapping(IntEnum):
+    LOADED = 1
+    OPTIMAL = 2
+    INFEASIBLE = 3
+    INF_OR_UNBD = 4
+    UNBOUNDED = 5
+    CUTOFF = 6
+    ITERATION_LIMIT = 7
+    NODE_LIMIT = 8
+    TIME_LIMIT = 9
+    SOLUTION_LIMIT = 10
+    INTERRUPTED = 11
+    NUMERIC = 12
+    SUBOPTIMAL = 13
+    INPROGRESS = 14
+    USER_OBJ_LIMIT = 15
+    WORK_LIMIT = 16
+    MEM_LIMIT = 17
+    LOCALLY_OPTIMAL = 18
+    LOCALLY_INFEASIBLE = 19
 
 
 class Instancia:
@@ -187,45 +210,51 @@ def criar_modelo(dados: Instancia, nome_arquivo: str):
 def main(dados: Instancia, arquivo: str):
     model, vd = criar_modelo(dados, arquivo)
 
-    model.setParam("TimeLimit", 300.0)
+    model.setParam("TimeLimit", 500.0)
     model.optimize()
-    if model.status == gp.GRB.OPTIMAL:
-        with open("resultado_" + arquivo + ".txt", "w", encoding="utf-8") as f:
-            f.write(f"Valor ótimo = {model.objVal}\n")
 
-            f.write("\nFÁBRICAS ABERTAS:\n")
+    with open("resultado_" + arquivo + ".txt", "w", encoding="utf-8") as res:
+        if model.status == gp.GRB.OPTIMAL:
+            res.write(
+                f"STATUS: {model.Status}-{GurobiStatusCodeMapping(model.status).name}\n"
+            )
+            res.write(f"Valor ótimo = {model.objVal}\n")
+            res.write(f"Gap: {model.MIPGap * 100}%\n")
+
+            res.write("\nFÁBRICAS ABERTAS:\n")
             fab_abertas = []
-            for i in dados.F:
-                if vd["abertura_fabrica"][i].X > 0.5:
-                    fab_abertas.append(i)
+            for f in dados.F:
+                if vd["abertura_fabrica"][f].X > 0.5:
+                    fab_abertas.append(f)
 
-            f.write(f"{str(fab_abertas)}\n")
+            res.write(f"{str(fab_abertas)}\n")
 
-            f.write("\nDEPÓSITOS ABERTOS:\n")
+            res.write("\nDEPÓSITOS ABERTOS:\n")
             dep_abertos = []
             for d in dados.D:
                 if vd["abertura_deposito"][d].X > 0.5:
                     dep_abertos.append(d)
 
-            f.write(f"{str(dep_abertos)}\n")
+            res.write(f"{str(dep_abertos)}\n")
 
-            f.write("\nFLUXO FASE 1:\n")
-            for i in dados.F:
+            res.write("\nFLUXO FASE 1:\n")
+            for f in dados.F:
                 for d in dados.D:
-                    valor_fluxo = vd["transp_fabrica_deposito"][i, d].X
+                    valor_fluxo = vd["transp_fabrica_deposito"][f, d].X
                     if valor_fluxo > 1e-6:
-                        f.write(f"Fabrica {i} >> Depósito {d} = {valor_fluxo:.2f}\n")
+                        res.write(f"Fabrica {f} >> Depósito {d} = {valor_fluxo:.2f}\n")
 
-
-            f.write("\nFLUXO FASE 2:\n")
+            res.write("\nFLUXO FASE 2:\n")
             for d in dados.D:
                 for c in dados.C:
                     valor_fluxo = vd["transp_deposito_cliente"][d, c].X
                     if valor_fluxo > 1e-6:
-                        f.write(f"Depósito {d} >> Cliente {c} = {valor_fluxo:.2f}\n")
-
-    else:
-        print("\nNenhuma solução ótima encontrada.")
+                        res.write(f"Depósito {d} >> Cliente {c} = {valor_fluxo:.2f}\n")
+        else:
+            res.write(
+                f"STATUS: {model.Status}-{GurobiStatusCodeMapping(model.status).name}"
+            )
+            res.write("\nNenhuma solução ótima encontrada.")
 
 
 if __name__ == "__main__":
