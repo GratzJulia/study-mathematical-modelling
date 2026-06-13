@@ -1,2 +1,2 @@
-
+STATUS: 9-TIME_LIMIT
 Nenhuma solução ótima encontrada.

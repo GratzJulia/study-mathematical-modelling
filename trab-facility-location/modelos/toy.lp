@@ -1,6 +1,6 @@
 \ Model PLFC2N
 \ LP format - for model browsing. Use MPS format to capture full model detail.
-\ Signature: 0xff1abbe13233ac67
+\ Signature: 0xff1abbe132334ed4
 Minimize
   43 transp_fabrica_deposito[0,0] + 42 transp_fabrica_deposito[0,1]
    + 41 transp_fabrica_deposito[1,0] + 35 transp_fabrica_deposito[1,1]

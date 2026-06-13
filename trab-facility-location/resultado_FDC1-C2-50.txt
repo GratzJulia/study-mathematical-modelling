@@ -1,4 +1,6 @@
+STATUS: 2-OPTIMAL
 Valor ótimo = 492747.0
+Gap: 0.0%
 
 FÁBRICAS ABERTAS:
 [9, 11, 25, 31, 40, 45]
