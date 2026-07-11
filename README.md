@@ -2,4 +2,7 @@
 Mathematical Modelling in Operations Research
 
 - Python 3.10 or higher
-- Optimization Solver: Gurobi Optimizer version 12 or higher (Academic License)
+- Jupyter Notebook or JupyterLab
+- Optimization Solvers: 
+1. Gurobi Optimizer version 12 or higher (Academic License)
+2. IBM CPLEX Optimization Studio (Academic License)
